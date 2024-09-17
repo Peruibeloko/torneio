@@ -4,6 +4,7 @@
   },
   "imports": {
     "@/": "./",
+    "shared/": "../shared/",
     "@std/collections": "jsr:@std/collections@^1.0.5",
     "hono": "jsr:@hono/hono@^4.5.11"
   },

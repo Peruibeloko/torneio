@@ -1,43 +1,11 @@
 import { chunk } from '@std/collections';
-
-export interface Round {
-  [bandId: string]: string[];
-}
+import { Band, GameStates, RejoinableState, Round } from 'shared/Game.ts';
 
 interface CurrentRoundVotes {
   [bandId: string]: {
     name: string;
     votes: string[];
   };
-}
-
-export interface Vote {
-  playerId: string;
-  bandId: string;
-}
-
-export interface Band {
-  id: string;
-  name: string;
-}
-
-interface LobbyState {
-  state: GameStates.LOBBY;
-  gameData: null;
-}
-
-interface CurrentRoundState {
-  state: GameStates.ROUND;
-  gameData: CurrentRoundVotes;
-}
-
-export type RejoinableState = LobbyState | CurrentRoundState;
-
-export enum GameStates {
-  LOBBY,
-  ROUND,
-  ROUND_END,
-  GAME_END
 }
 
 export class Game {
@@ -212,7 +180,7 @@ export class Game {
     if (this.#state === GameStates.LOBBY) {
       return {
         state: GameStates.LOBBY,
-        gameData: null
+        data: null
       };
     }
 
@@ -226,7 +194,7 @@ export class Game {
 
     return {
       state: GameStates.ROUND,
-      gameData
+      data: gameData
     };
   }
 

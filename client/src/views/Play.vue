@@ -7,7 +7,8 @@
 
 <script setup lang="ts">
 import { computed, inject, toValue } from "vue";
-import { GameStates, useGame } from "../composables/game";
+import { GameStates } from "../../../shared/Game";
+import { useGame } from "../composables/game";
 import { useSocket } from "../composables/socket";
 
 import CurrentRound from "./gamestates/CurrentRound.vue";

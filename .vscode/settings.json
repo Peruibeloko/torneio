@@ -1,0 +1,8 @@
+{
+  "deno.enablePaths": ["./server"],
+  "deno.disablePaths": [
+    "./client",
+    "./shared"
+  ],
+  "deno.enable": false
+}

@@ -1,57 +1,39 @@
-import { Round } from '@/game.ts';
-import { Vote, Band, RejoinableState, GameStates } from '@/game.ts';
-
-export type MessageIn =
-  | { type: 'vote'; data: Vote }
-  | { type: 'enterLobby'; data: string }
-  | { type: 'getBands'; data: null }
-  | { type: 'getPlayers'; data: null }
-  | { type: 'startGame'; data: null }
-  | { type: 'reset'; data: null }
-  | { type: 'reconnectRequest'; data: string };
-
-export type MessageOut =
-  | { type: 'updateLobby'; data: string[] }
-  | { type: 'updateBands'; data: string[] }
-  | { type: 'updateVotes'; data: Round }
-  | { type: 'roundStart'; data: [Band, Band] }
-  | { type: 'roundEnd'; data: string }
-  | { type: 'gameEnd'; data: string }
-  | { type: 'reconnectResponse'; data: RejoinableState };
+import { Round, Band, RejoinableState, GameStates } from 'shared/Game.ts';
+import { ServerMessage } from 'shared/Message.ts';
 
 export const Message = {
-  updateLobby: (players: string[]): MessageOut => ({
+  updateLobby: (players: string[]): ServerMessage => ({
     type: 'updateLobby',
     data: players
   }),
 
-  updateBands: (bands: string[]): MessageOut => ({
+  updateBands: (bands: string[]): ServerMessage => ({
     type: 'updateBands',
     data: bands
   }),
 
-  updateVotes: (votesUpdate: Round): MessageOut => ({
+  updateVotes: (votesUpdate: Round): ServerMessage => ({
     type: 'updateVotes',
     data: votesUpdate
   }),
 
-  roundStart: (bands: [Band, Band]): MessageOut => ({
+  roundStart: (bands: [Band, Band]): ServerMessage => ({
     type: 'roundStart',
     data: bands
   }),
 
-  roundEnd: (winner: string): MessageOut => ({
+  roundEnd: (winner: string): ServerMessage => ({
     type: 'roundEnd',
     data: winner
   }),
 
-  gameEnd: (winner: string): MessageOut => ({
+  gameEnd: (winner: string): ServerMessage => ({
     type: 'gameEnd',
     data: winner
   }),
 
-  reconnectionResponse: ({ state, gameData }: RejoinableState): MessageOut => ({
+  reconnectionResponse: ({ state, data }: RejoinableState): ServerMessage => ({
     type: 'reconnectResponse',
-    data: state === GameStates.LOBBY ? { state, gameData } : { state, gameData }
+    data: state === GameStates.LOBBY ? { state, data } : { state, data }
   })
 };

@@ -1,11 +1,11 @@
 import { onMounted, onUnmounted } from "vue";
-import { MessageIn, MessageOut } from "../types";
+import { ServerMessage, ClientMessage } from "../../../shared/Message";
 
 export const useSocket = (
   socket: WebSocket,
-  onMessage?: (msg: MessageIn) => unknown
+  onMessage?: (msg: ServerMessage) => unknown
 ) => {
-  const send = (msg: MessageOut) => {
+  const send = (msg: ClientMessage) => {
     socket.send(JSON.stringify(msg));
   };
 

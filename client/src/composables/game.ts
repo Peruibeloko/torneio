@@ -1,55 +1,20 @@
 import { ref } from "vue";
-
-export interface Round {
-  [bandId: string]: string[];
-}
-
-export interface Vote {
-  playerId: string;
-  bandId: string;
-}
-
-export interface Band {
-  id: string;
-  name: string;
-}
-
-interface LobbyState {
-  state: GameStates.LOBBY,
-  data: null
-}
-
-interface RoundState {
-  state: GameStates.ROUND;
-  data: CurrentRoundVotes
-}
-
-export type RejoinableState = LobbyState | RoundState
-
-export interface CurrentRoundVotes {
-  [bandId: string]: {
-    name: string;
-    votes: string[];
-  };
-}
+import { Band, Round, CurrentRoundVotes, GameStates } from "../../../shared/Game";
 
 export interface Game {
   gameState: GameStates;
-  winnerName: string;
+  players: Set<string>;
+  bands: CurrentRoundVotes;
+  winner: string;
   currentRound: CurrentRoundVotes;
   playerNames: Set<string>;
 }
 
-export enum GameStates {
-  LOBBY,
-  ROUND,
-  ROUND_END,
-  GAME_END,
-}
-
 const game = ref<Game>({
   gameState: GameStates.LOBBY,
-  winnerName: "",
+  winner: "",
+  players: new Set(),
+  bands: {},
   currentRound: {} as CurrentRoundVotes,
   playerNames: new Set<string>(),
 });
@@ -68,11 +33,11 @@ export const useGame = () => {
       );
     },
     endRound(winner: string) {
-      game.value.winnerName = winner;
+      game.value.winner = winner;
       game.value.gameState = GameStates.ROUND_END;
     },
     endGame(winner: string) {
-      game.value.winnerName = winner;
+      game.value.winner = winner;
       game.value.gameState = GameStates.GAME_END;
     },
     reconnect(currentRoundState: CurrentRoundVotes) {

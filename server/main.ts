@@ -1,7 +1,8 @@
 import { Game } from '@/game.ts';
 import { ConnectionManager } from '@/ConnectionManager.ts';
 import { HandlerFactory } from '@/handlers.ts';
-import { Message, MessageIn } from '@/messages.ts';
+import { Message } from '@/messages.ts';
+import { ClientMessage } from "shared/Message.ts";
 
 import { Hono } from 'hono';
 import { upgradeWebSocket } from 'hono/deno';
@@ -37,7 +38,7 @@ app.get(
   }))
 );
 
-const incomingMessage = (socket: WSContext, msg: MessageIn) => {
+const incomingMessage = (socket: WSContext, msg: ClientMessage) => {
   switch (msg.type) {
     case 'enterLobby':
       handlers.newBand(msg.data);

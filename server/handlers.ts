@@ -1,7 +1,7 @@
 import { Game } from '@/game.ts';
 import { Message } from '@/messages.ts';
 import { ConnectionManager } from '@/ConnectionManager.ts';
-import { Vote } from '@/game.ts';
+import { Vote } from 'shared/Game.ts';
 
 export class HandlerFactory {
   #connections: ConnectionManager;
