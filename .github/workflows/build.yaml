@@ -46,14 +46,23 @@ jobs:
       - name: Run build
         run: pnpm run build
 
-      - name: PLEASE JUST WORK
+      - name: Create tarball
         run: |
-          ls -la dist
+          tar \
+          --dereference --hard-dereference \
+          --directory "dist" \
+          -cvf "artifact.tar" \
+          --exclude=.git \
+          --exclude=.github \
+          --exclude=".[^/]*" \
+          .
+          ls -la
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload tarball
+        uses: actions/upload-artifact@v4
         with:
-          path: dist
+          name: github-pages
+          path: artifact.tar
 
       - name: Deploy to GitHub Pages
         id: deployment
