@@ -13,12 +13,11 @@ permissions:
 env:
   VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
 
-defaults:
-  run:
-    working-directory: client
-
 jobs:
   build-and-deploy:
+    defaults:
+      run:
+        working-directory: client
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
