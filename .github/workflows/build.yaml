@@ -39,10 +39,8 @@ jobs:
 
       - name: Setup Node
         uses: actions/setup-node@v4.0.2
-        working-directory: client
         with:
           node-version: 22
-          cache: 'pnpm'
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
