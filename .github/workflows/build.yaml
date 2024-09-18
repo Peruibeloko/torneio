@@ -3,19 +3,14 @@ name: Build and Deploy (Vue SPA)
 on:
   workflow_dispatch:
   push:
-    branches: ["main"]
-
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+    branches: ['main']
 
 env:
   VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
 
 defaults:
-    run:
-      working-directory: ./client
+  run:
+    working-directory: ./client
 
 jobs:
   imported:
