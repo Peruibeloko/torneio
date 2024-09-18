@@ -10,10 +10,6 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 env:
   VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
 
