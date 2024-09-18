@@ -17,6 +17,10 @@ defaults:
   run:
     working-directory: client
 
+# jobs:
+#   imported:
+#     uses: peruibeloko/shared/.github/workflows/vue.yml@main
+
 jobs:
   build-and-deploy:
     environment:
@@ -51,27 +55,6 @@ jobs:
         with:
           path: client/dist
 
-      # - name: Create tarball
-      #   run: |
-      #     tar \
-      #     --dereference --hard-dereference \
-      #     --directory "dist" \
-      #     -czf "artifact.tar.gz" \
-      #     --exclude=.git \
-      #     --exclude=.github \
-      #     --exclude=".[^/]*" \
-      #     .
-      #     ls -la
-
-      # - name: Upload tarball
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: github-pages
-      #     path: ./client/artifact.tar.gz
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-# jobs:
-#   imported:
-#     uses: peruibeloko/shared/.github/workflows/vue.yml@main
