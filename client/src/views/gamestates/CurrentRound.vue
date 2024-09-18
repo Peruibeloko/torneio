@@ -30,6 +30,7 @@ const hasVoted = ref(false);
 const { bands } = defineProps<{ bands: Game["currentRound"] }>();
 const [band1Id, band2Id] = Object.keys(bands);
 const socket = toValue(inject("socket")) as WebSocket;
+const playerId = localStorage.getItem('playerId')!;
 
 const { send } = useSocket(socket, (msg) => {
   switch (msg.type) {
@@ -44,7 +45,7 @@ const { send } = useSocket(socket, (msg) => {
 
 const vote = (bandId: string) => {
   hasVoted.value = true;
-  send(Messages.vote(bandId));
+  send(Messages.vote(playerId, bandId));
 };
 </script>
 
