@@ -13,11 +13,12 @@ permissions:
 env:
   VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
 
+defaults:
+  run:
+    working-directory: client
+
 jobs:
   build-and-deploy:
-    defaults:
-      run:
-        working-directory: client
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -38,9 +39,10 @@ jobs:
 
       - name: Setup Node
         uses: actions/setup-node@v4.0.2
+        working-directory: client
         with:
           node-version: 22
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -54,12 +56,11 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./dist"
+          path: './dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
 # jobs:
 #   imported:
 #     uses: peruibeloko/shared/.github/workflows/vue.yml@main
