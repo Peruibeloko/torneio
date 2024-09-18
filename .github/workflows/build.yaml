@@ -46,6 +46,10 @@ jobs:
       - name: Run build
         run: pnpm run build
 
+      - name: PLEASE JUST WORK
+        run: |
+          ls -la dist
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
