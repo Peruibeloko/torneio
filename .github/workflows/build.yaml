@@ -15,7 +15,7 @@ env:
 
 defaults:
   run:
-    working-directory: ./client
+    working-directory: ./torneio/client
 
 jobs:
   build-and-deploy:
