@@ -6,14 +6,14 @@
   <RouterView />
   <footer class="spacer"></footer>
 </template>
-
 <script setup lang="ts">
 import { inject, onBeforeUnmount, onMounted, toValue } from "vue";
 import { useSocket } from "./composables/socket";
 import { useRoute } from "vue-router";
 import router, { RouteNames } from "./router";
 import { Messages } from "./messages";
-import { GameStates, useGame } from "./composables/game";
+import { useGame } from "./composables/game";
+import { GameStates } from "../../shared/Game"
 
 const socket = toValue(inject("socket")) as WebSocket;
 const { reconnect } = useGame();
@@ -25,13 +25,13 @@ const { close, send } = useSocket(socket, (msg) => {
         router.push('/play')
         break;
       }
-      
+
       if (msg.data.state === GameStates.ROUND) {
-        reconnect(msg.data)        
+        reconnect(msg.data.data)
         router.push('/play')
       }
       break;
-  
+
     default:
       break;
   }
@@ -41,18 +41,17 @@ const currentRoute = useRoute();
 onBeforeUnmount(close);
 onMounted(() => {
   const playerId = localStorage.getItem('userId');
-  if(playerId && currentRoute.name === RouteNames.LOGIN) {
+  if (playerId && currentRoute.name === RouteNames.LOGIN) {
     send(Messages.reconnectRequest(playerId))
   }
 })
 
 </script>
-
 <style scoped>
 h1 {
   font-family: "Bebas Neue";
   font-size: 3rem;
-  filter: drop-shadow(0px 3px 0px var(--red)); 
+  filter: drop-shadow(0px 3px 0px var(--red));
 }
 
 header {

@@ -59,7 +59,6 @@ export class Game {
     if (byeCount === 0) return [];
 
     const byes: string[] = [];
-    const byeRounds: [string, string][] = [];
 
     // get <byeCount> random bands
     for (let i = 0; i < byeCount; i++) {
@@ -67,19 +66,13 @@ export class Game {
     }
 
     // store <byes/2> pairs into #tournament
-    if (byes.length % 2 === 0) {
-      for (let i = 0; i < byes.length; i += 2) {
-        byeRounds.push([byes[i], byes[i + 1]]);
-      }
-    } else {
-      let i = 0;
-      for (; i < byes.length - 1; i += 2) {
-        byeRounds.push([byes[i], byes[i + 1]]);
-      }
-      byeRounds.push([byes[i], '']);
+    const byeRounds = chunk(byes, 2);
+
+    if (byeRounds.at(-1)?.length === 1) {
+      byeRounds.at(-1)?.push('');
     }
 
-    return byeRounds;
+    return byeRounds as [string, string][];
   }
 
   startGame() {

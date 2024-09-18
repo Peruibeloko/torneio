@@ -26,14 +26,12 @@ export interface CurrentRoundVotes {
   };
 }
 
-interface LobbyState {
-  state: GameStates.LOBBY,
-  data: null
-}
-
-interface RoundState {
-  state: GameStates.ROUND;
-  data: CurrentRoundVotes
-}
-
-export type RejoinableState = LobbyState | RoundState
+export type RejoinableState =
+  | {
+      state: GameStates.LOBBY;
+      data: null;
+    }
+  | {
+      state: GameStates.ROUND;
+      data: CurrentRoundVotes;
+    };
