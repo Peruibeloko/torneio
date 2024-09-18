@@ -1,4 +1,4 @@
-import { Band, RejoinableState, Round, Vote } from "./Game";
+import { Band, RejoinableState, Round, Vote } from "./Game.ts";
 
 export type ClientMessage =
   | { type: 'vote'; data: Vote }
