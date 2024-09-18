@@ -51,7 +51,7 @@ jobs:
           tar \
           --dereference --hard-dereference \
           --directory "dist" \
-          -czf "artifact" \
+          -czf "artifact.tar.gz" \
           --exclude=.git \
           --exclude=.github \
           --exclude=".[^/]*" \
