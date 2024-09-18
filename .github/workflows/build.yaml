@@ -5,6 +5,11 @@ on:
   push:
     branches: ['main']
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 env:
   VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
 
