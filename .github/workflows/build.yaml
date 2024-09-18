@@ -27,11 +27,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.7
 
-      - name: Where am I?
-        run: |
-          ls -la
-          echo "$PWD"
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v3.0.0
         with:
