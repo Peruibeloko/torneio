@@ -3,7 +3,7 @@
   "tasks": {
     "check": "deno fmt --check . && deno lint . && deno check",
     
-    "dev": "./dev.bat",
+    "dev": "wt deno task dev:api ';' sp deno task dev:vite",
     "dev:api": "deno serve --watch --allow-net ./src/server.ts",
     "dev:vite": "deno run -A npm:vite",
     
