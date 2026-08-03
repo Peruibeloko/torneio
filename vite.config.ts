@@ -1,13 +1,12 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import deno from '@deno/vite-plugin';
-import { fromFileUrl } from '@std/path';
 
 export default defineConfig({
-  plugins: [deno(), vue()],
+  plugins: [vue(), deno()],
   resolve: {
     alias: {
-      '@': fromFileUrl(import.meta.resolve('./src'))
+      '@': new URL('./src', import.meta.url).toString()
     }
   },
   server: {

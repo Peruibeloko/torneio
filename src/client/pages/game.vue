@@ -5,6 +5,7 @@
       >Vencedor{{ game.gameEnd ? null : ' da rodada' }}</span
     ><span> 🎉</span>
     <h2 class="fancytext_big">{{ game.winner }}</h2>
+    <button type="button" v-if="game.gameEnd">Voltar ao lobby</button>
   </dialog>
 
   <header>
@@ -35,9 +36,9 @@
 </template>
 
 <script lang="ts" setup>
-import { useGameStore } from '@/client/stores/game';
-import { useVoteStore } from '@/client/stores/votes';
-import { ClientEventBus } from '@/game/client/ClientEventBus';
+import { useGameStore } from '@/client/stores/game.ts';
+import { useVoteStore } from '@/client/stores/votes.ts';
+import { ClientEventBus } from '@/game/client/ClientEventBus.ts';
 import { ref, useTemplateRef } from 'vue';
 
 const game = useGameStore();

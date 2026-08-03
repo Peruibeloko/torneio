@@ -51,7 +51,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { onEnter } from '@/client/composables/enter.ts';
 import { useGameStore } from '@/client/stores/game.ts';
-import { ClientEventBus } from '@/game/client/ClientEventBus';
+import { ClientEventBus } from '@/game/client/ClientEventBus.ts';
 
 const game = useGameStore();
 const router = useRouter();
