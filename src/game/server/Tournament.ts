@@ -30,6 +30,8 @@ export class Tournament {
 
   setup(things: Set<string>) {
     this.#contestants = this.#shuffleArray(things.values().toArray());
+    this.#winner = '';
+    this.#round = 0
   }
 
   getNextMatch() {

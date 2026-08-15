@@ -2,9 +2,11 @@ import { GameClient } from '@/game/client/GameClient.ts';
 import { defineStore } from 'pinia';
 import { markRaw, ref } from 'vue';
 
+export type PlayerState = 'notReady' | 'ready' | 'inGame';
+
 interface ClientPlayer {
   name: string;
-  ready: boolean;
+  state: PlayerState;
 }
 
 export const useGameInternalStore = defineStore('gameInternal', () => {

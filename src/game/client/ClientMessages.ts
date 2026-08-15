@@ -1,6 +1,7 @@
 export type ClientMessage =
   | { type: 'create'; data: null }
   | { type: 'join'; data: JoinMsg }
+  | { type: 'returnLobby'; data: ReturnLobbyMsg }
   | { type: 'leave'; data: LeaveMsg }
   | { type: 'suggest'; data: SuggestMsg }
   | { type: 'ready'; data: ReadyMsg }
@@ -11,6 +12,10 @@ type ClientMessageBase = {
 };
 
 export type JoinMsg = {
+  player: string;
+} & ClientMessageBase;
+
+export type ReturnLobbyMsg = {
   player: string;
 } & ClientMessageBase;
 

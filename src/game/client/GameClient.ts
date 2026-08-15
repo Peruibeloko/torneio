@@ -26,44 +26,65 @@ export class GameClient {
   }
 
   #setupEvents() {
-    ClientEventBus.getBus().subscribe('createLobbyResponse', lobbyCode => {
+    ClientEventBus.instance().subscribe('createLobbyResponse', lobbyCode => {
       this.#game.lobbyCode = lobbyCode;
     });
 
-    ClientEventBus.getBus().subscribe('joinLobbyResponse', info => {
+    ClientEventBus.instance().subscribe('joinLobbyResponse', info => {
       if (!info) return;
+      this.#game.lobbyCode = info.lobbyCode;
       this.#game.playerName = info.uniqueName;
     });
 
-    ClientEventBus.getBus().subscribe('allPlayers', players => {
+    ClientEventBus.instance().subscribe('allPlayers', players => {
       this.#game.players = players;
     });
 
-    ClientEventBus.getBus().subscribe('allVotes', this.#setVotes.bind(this));
+    ClientEventBus.instance().subscribe('allVotes', this.#setVotes.bind(this));
 
-    ClientEventBus.getBus().subscribe('allSuggestions', things => {
+    ClientEventBus.instance().subscribe('allSuggestions', things => {
       this.#game.things = things;
     });
 
-    ClientEventBus.getBus().subscribe('playerJoined', name =>
-      this.#game.players.push({ name, ready: false })
+    ClientEventBus.instance().subscribe('playerJoined', ({ name, state }) =>
+      this.#game.players.push({ name, state })
     );
 
-    ClientEventBus.getBus().subscribe('playerReady', this.#playerReady.bind(this));
+    ClientEventBus.instance().subscribe(
+      'playerReady',
+      this.#playerReady.bind(this)
+    );
 
-    ClientEventBus.getBus().subscribe('playerLeft', this.#playerLeft.bind(this));
+    ClientEventBus.instance().subscribe(
+      'playerLeft',
+      this.#playerLeft.bind(this)
+    );
 
-    ClientEventBus.getBus().subscribe('newVote', ({ player, thing }) =>
+    ClientEventBus.instance().subscribe(
+      'playerReturnedToLobby',
+      this.#playerReturnedToLobby.bind(this)
+    );
+
+    ClientEventBus.instance().subscribe('newVote', ({ player, thing }) =>
       this.#votes.vote(thing, player)
     );
 
-    ClientEventBus.getBus().subscribe('newSuggestion', thing =>
+    ClientEventBus.instance().subscribe('newSuggestion', thing =>
       this.#game.things.unshift(thing)
     );
 
-    ClientEventBus.getBus().subscribe('roundStart', this.#startRound.bind(this));
+    ClientEventBus.instance().subscribe('gameStart', () => {
+      for (const p of this.#game.players) {
+        p.state = 'inGame';
+      }
+    });
 
-    ClientEventBus.getBus().subscribe('roundEnd', this.#endRound.bind(this));
+    ClientEventBus.instance().subscribe(
+      'roundStart',
+      this.#startRound.bind(this)
+    );
+
+    ClientEventBus.instance().subscribe('roundEnd', this.#endRound.bind(this));
   }
 
   createLobby() {
@@ -77,6 +98,16 @@ export class GameClient {
     this.#socket.send({
       type: 'join',
       data: { lobbyCode, player: plainName }
+    });
+  }
+
+  returnToLobby() {
+    this.#socket.send({
+      type: 'returnLobby',
+      data: {
+        lobbyCode: this.#game.lobbyCode,
+        player: this.#game.playerName
+      }
     });
   }
 
@@ -130,13 +161,21 @@ export class GameClient {
 
   #playerReady(name: string) {
     const idx = this.#game.players.findIndex(p => p.name === name);
-    this.#game.players[idx]!.ready = true;
+    if (idx === -1) return;
+    this.#game.players[idx].state = 'ready';
   }
 
   #playerLeft(name: string) {
     const idx = this.#game.players.findIndex(p => p.name === name);
+    if (idx === -1) return;
     this.#game.players.splice(idx, 1);
     this.#votes.removePlayer(name);
+  }
+
+  #playerReturnedToLobby(name: string) {
+    const idx = this.#game.players.findIndex(p => p.name === name);
+    if (idx === -1) return;
+    this.#game.players[idx].state = 'notReady';
   }
 
   #setVotes({ things, votes }: ClientEvents['allVotes']) {
@@ -146,8 +185,8 @@ export class GameClient {
 
   #handleMsg(msg: ServerMessage) {
     console.debug('[GameClient class] Got message', msg);
-    ClientEventBus.getBus().publish(
-      msg.type as keyof ClientEvents,
+    ClientEventBus.instance().publish(
+      msg.type,
       msg.data as ClientEvents[typeof msg.type]
     );
   }

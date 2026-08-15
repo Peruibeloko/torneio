@@ -9,7 +9,7 @@
       <h2 class="fancytext_small">Jogadores</h2>
       <ul>
         <li v-for="p in game.players" :key="p.name">
-          {{ p.ready ? '🟩' : '🟥' }} {{ p.name }}
+          {{ status(p.state) }} {{ p.name }}
         </li>
       </ul>
       <button
@@ -52,6 +52,7 @@ import { useRouter } from 'vue-router';
 import { onEnter } from '@/client/composables/enter.ts';
 import { useGameStore } from '@/client/stores/game.ts';
 import { ClientEventBus } from '@/game/client/ClientEventBus.ts';
+import { PlayerState } from '@/client/stores/internal';
 
 const game = useGameStore();
 const router = useRouter();
@@ -59,6 +60,17 @@ const router = useRouter();
 const suggestion = ref('');
 const disabledInputs = ref(false);
 const isReady = ref(false);
+
+const status = (status: PlayerState) => {
+  switch (status) {
+    case 'notReady':
+      return '🟥';
+    case 'ready':
+      return '🟩';
+    case 'inGame':
+      return '🟦';
+  }
+};
 
 const handleReady = () => {
   disabledInputs.value = true;
@@ -73,7 +85,7 @@ const suggest = () => {
 
 const suggestOnEnter = onEnter(suggest);
 
-ClientEventBus.getBus().subscribe('gameStart', () => {
+ClientEventBus.instance().subscribe('gameStart', () => {
   // TODO countdown
   router.push({ name: 'game' });
 });

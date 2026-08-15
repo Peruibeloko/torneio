@@ -3,15 +3,16 @@ import {
   EventType,
   Handlers
 } from '@/game/events/ClientEvents.ts';
-import { EventBus } from '@/game/events/EventBus.ts';
+
+type HandlerMap<T extends EventType> = Map<T, Set<Handlers[T]>>;
 
 export class ClientEventBus {
-  #bus: EventBus<ClientEvents> = new EventBus(this);
+  #topics: HandlerMap<EventType> = new Map();
   static #instance: ClientEventBus;
 
   private constructor() {}
 
-  static getBus() {
+  static instance() {
     if (!ClientEventBus.#instance) {
       ClientEventBus.#instance = new ClientEventBus();
     }
@@ -19,14 +20,42 @@ export class ClientEventBus {
   }
 
   subscribe<T extends EventType>(topic: T, handler: Handlers[T]) {
-    this.#bus.subscribe(topic, handler);
+    let channel = this.#topics.get(topic);  
+    
+    if (!channel) {
+      channel = new Set();
+      this.#topics.set(topic, channel);
+    }
+    
+    channel.add(handler);
+
+    if (handler === undefined) console.trace()
+    console.log(channel);
   }
 
   unsubscribe<T extends EventType>(topic: T, handler: Handlers[T]) {
-    this.#bus.unsubscribe(topic, handler);
+    const channel = this.#topics.get(topic);
+
+    if (!channel) {
+      console.error('[EventBus] Topic "%s" not found', topic);
+      return;
+    }
+
+    channel.delete(handler);
   }
 
-  publish<T extends EventType>(type: T, data: ClientEvents[T]) {
-    this.#bus.publish(type, data);
+  publish<T extends EventType>(topic: T, data: ClientEvents[T]) {
+    const channel = this.#topics.get(topic) as Set<Handlers[T]>;
+
+    if (!channel) {
+      console.error('[EventBus] Topic "%s" not found', topic);
+      return;
+    }
+
+    for (const handler of channel) {
+      handler(data);
+    }
+    
+    console.debug('[%s] posted message:', topic, data);
   }
 }

@@ -1,15 +1,21 @@
 import { ThingTuple } from '@/game/server/Votes.ts';
-import { GenericHandlers } from "@/game/events/EventBus.ts";
 
 export type ServerEvents = {
   create: CreateLobbyEvt;
   join: JoinLobbyEvt;
+  returnLobby: ReturnLobbyEvt;
   leave: LeaveLobbyEvt;
   suggest: SuggestThingEvt;
   ready: PlayerReadyEvt;
   vote: VoteEvt;
   roundStart: RoundStartEvt;
   roundEnd: RoundEndEvt;
+};
+
+type GenericEvent = { [type: string]: unknown };
+
+export type GenericHandlers<E extends GenericEvent> = {
+  [T in keyof E]: (data: E[T]) => void;
 };
 
 export type EventType = keyof ServerEvents;
@@ -19,6 +25,7 @@ type Socket = { socket: WebSocket };
 type CreateLobbyEvt = Socket;
 
 type JoinLobbyEvt = { lobbyCode: string; player: string } & Socket;
+type ReturnLobbyEvt = { lobbyCode: string; player: string } & Socket;
 type LeaveLobbyEvt = { lobbyCode: string; player: string } & Socket;
 
 type SuggestThingEvt = { lobbyCode: string; thing: string } & Socket;

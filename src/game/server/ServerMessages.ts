@@ -1,4 +1,4 @@
-import { GameState } from "@/game/server/ServerLobby.ts";
+import { GameState, PlayerState } from '@/game/server/ServerLobby.ts';
 import { ThingTuple, VotesTuple } from '@/game/server/Votes.ts';
 
 export type ServerMessage =
@@ -7,9 +7,10 @@ export type ServerMessage =
   | { type: 'allPlayers'; data: AllPlayersMsg }
   | { type: 'allVotes'; data: AllVotesMsg }
   | { type: 'allSuggestions'; data: AllSuggestionsMsg }
-  | { type: 'playerJoined'; data: string }
+  | { type: 'playerJoined'; data: PlayerJoinedMsg }
   | { type: 'playerReady'; data: string }
   | { type: 'playerLeft'; data: string }
+  | { type: 'playerReturnedToLobby'; data: string }
   | { type: 'newLobby'; data: string }
   | { type: 'newVote'; data: VoteMsg }
   | { type: 'newSuggestion'; data: string }
@@ -20,11 +21,12 @@ export type ServerMessage =
 
 export type AllPlayersMsg = {
   name: string;
-  ready: boolean;
+  state: PlayerState;
 }[];
 
 export type JoinLobbyResp = {
   uniqueName: string;
+  lobbyCode: string;
   stage: GameState['stage'];
 } | null;
 
@@ -53,4 +55,9 @@ export type RoundEndMsg = {
 export type VoteMsg = {
   player: string;
   thing: string;
+};
+
+export type PlayerJoinedMsg = {
+  name: string;
+  state: PlayerState;
 };

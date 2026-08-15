@@ -1,17 +1,19 @@
-import { ServerEventBus } from '@/game/client/ServerEventBus.ts';
 import { ServerEvents } from '@/game/events/ServerEvents.ts';
 import type { ServerMessage } from '@/game/server/ServerMessages.ts';
 import { Tournament } from '@/game/server/Tournament.ts';
 import { Votes } from '@/game/server/Votes.ts';
 import { encode } from 'msgpack';
+import { ClientMessage } from '@/game/client/ClientMessages.ts';
+
+export type PlayerState = 'notReady' | 'ready' | 'inGame';
 
 type ServerPlayer = {
-  ready: boolean;
+  state: PlayerState;
   socket: WebSocket;
 };
 
 export type GameState =
-  | { stage: 'lobby'; things: Set<string>; remainingReady: number }
+  | { stage: 'lobby'; remainingReady: number }
   | { stage: 'roundEnd'; round: number; winner: string; gameEnd: boolean }
   | {
       stage: 'game';
@@ -25,43 +27,47 @@ export class ServerLobby {
   #players = new Map<string, ServerPlayer>();
   #state: GameState;
   #tournament = new Tournament();
+  #things: Set<string>;
 
   constructor(lobbyCode: string) {
     this.#lobbyCode = lobbyCode;
+    this.#things = new Set<string>();
     this.#state = {
       stage: 'lobby',
-      things: new Set<string>(),
       remainingReady: 0
     };
-
-    ServerEventBus.getBus().subscribe(
-      lobbyCode,
-      'leave',
-      this.removePlayer.bind(this)
-    );
-    ServerEventBus.getBus().subscribe(
-      lobbyCode,
-      'ready',
-      this.playerReady.bind(this)
-    );
-    ServerEventBus.getBus().subscribe(
-      lobbyCode,
-      'suggest',
-      this.suggestThing.bind(this)
-    );
-    ServerEventBus.getBus().subscribe(
-      lobbyCode,
-      'vote',
-      this.voteFor.bind(this)
-    );
   }
 
   get stage() {
     return this.#state.stage;
   }
 
+  get code() {
+    return this.#lobbyCode;
+  }
+
   get size() {
     return this.#players.size;
+  }
+
+  handleMsg(msg: ClientMessage, socket: WebSocket) {
+    switch (msg.type) {
+      case 'ready':
+        this.playerReady({ ...msg.data, socket });
+        break;
+      case 'returnLobby':
+        this.playerReturnedToLobby({ ...msg.data, socket });
+        break;
+      case 'leave':
+        this.removePlayer(msg.data.player);
+        break;
+      case 'suggest':
+        this.suggestThing({ ...msg.data, socket });
+        break;
+      case 'vote':
+        this.voteFor({ ...msg.data, socket });
+        break;
+    }
   }
 
   #sendMsg(msg: ServerMessage, socket: WebSocket) {
@@ -109,9 +115,41 @@ export class ServerLobby {
   }
 
   addPlayer(player: string, socket: WebSocket) {
-    this.#shoutMsg({ type: 'playerJoined', data: player });
-    this.#players.set(player, { ready: false, socket });
+    const choosePlayerState = (): PlayerState => {
+      switch (this.#state.stage) {
+        case 'lobby':
+          return 'notReady';
+        case 'roundEnd':
+        case 'game':
+          return 'inGame';
+      }
+    };
+
+    this.#shoutMsg({
+      type: 'playerJoined',
+      data: { name: player, state: choosePlayerState() }
+    });
+
+    this.#players.set(player, { state: choosePlayerState(), socket });
+
+    if (this.#state.stage === 'lobby') this.#state.remainingReady++;
     this.#syncPlayer(socket);
+  }
+
+  playerReturnedToLobby({ player, socket }: ServerEvents['returnLobby']) {
+    console.log('[%s] Player %s returned to lobby', this.#lobbyCode, player);
+    if (this.#state.stage === 'roundEnd') {
+      (this.#state.stage as string) = 'lobby';
+      this.#resetLobby();
+    }
+    this.#shoutMsg({ type: 'playerReturnedToLobby', data: player });
+    this.#players.set(player, { state: 'notReady', socket });
+  }
+
+  #resetLobby() {
+    if (this.#state.stage !== 'lobby') return;
+    this.#state.remainingReady = this.#players.size;
+    this.#tournament.setup(this.#things);
   }
 
   #syncPlayer(socket: WebSocket) {
@@ -125,7 +163,7 @@ export class ServerLobby {
                 .entries()
                 .map(([name, p]) => ({
                   name,
-                  ready: p.ready
+                  state: p.state
                 }))
                 .toArray()
             },
@@ -135,12 +173,10 @@ export class ServerLobby {
           this.#sendMsg(
             {
               type: 'allSuggestions',
-              data: this.#state.things.values().toArray()
+              data: this.#things.values().toArray()
             },
             socket
           );
-
-          this.#state.remainingReady++;
         }
         break;
 
@@ -171,7 +207,7 @@ export class ServerLobby {
     }
   }
 
-  removePlayer({ player }: { player: string }) {
+  removePlayer(player: string) {
     this.#players.delete(player);
     if (this.#players.size === 0) return;
 
@@ -189,7 +225,7 @@ export class ServerLobby {
   suggestThing({ thing }: ServerEvents['suggest']) {
     if (this.#state.stage !== 'lobby') return;
     this.#shoutMsg({ type: 'newSuggestion', data: thing });
-    this.#state.things.add(thing);
+    this.#things.add(thing);
   }
 
   playerReady({ player }: ServerEvents['ready']) {
@@ -197,11 +233,18 @@ export class ServerLobby {
 
     this.#shoutMsg({ type: 'playerReady', data: player });
 
-    const playerData = this.#players.get(player)!;
-    playerData.ready = true;
-    this.#players.set(player, playerData);
+    const playerData = this.#players.get(player);
+    if (!playerData) return;
+    
+    this.#players.set(player, { ...playerData, state: 'ready'});
 
-    this.#state.remainingReady--;
+    this.#state.remainingReady -= 1;
+    
+    console.log(
+      '%d ready, %d remaining',
+      this.#players.size - this.#state.remainingReady,
+      this.#state.remainingReady
+    );
 
     if (this.#state.remainingReady === 0) this.startGame();
   }
@@ -224,7 +267,12 @@ export class ServerLobby {
   startGame() {
     if (this.#state.stage !== 'lobby') return;
     console.log('[%s] Starting game', this.#lobbyCode);
-    this.#tournament.setup(this.#state.things);
+    this.#tournament.setup(this.#things);
+    
+    for (const [playerName, player] of this.#players) {
+      this.#players.set(playerName, { ...player, state: 'inGame' });
+    }    
+    
     this.#shoutMsg({ type: 'gameStart', data: null });
     this.startRound();
   }

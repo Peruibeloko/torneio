@@ -1,10 +1,20 @@
 dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
   margin: auto;
+  align-items: center;
   padding: 2rem;
   text-align: center;
   border: var(--border);
   border-radius: 1rem;
   background-color: var(--color__main_less);
+
+  header {
+    margin: 0;
+    display: flex;
+    gap: 2rem;
+  }
 
   h2 {
     font-size: 3rem;
@@ -13,10 +23,6 @@ dialog {
   span {
     font-size: 1.5rem;
     font-weight: bold;
-  }
-
-  span.left {
-    transform: scaleX(-1);
   }
 
   &::backdrop {
@@ -33,7 +39,7 @@ header h2 {
 main {
   display: flex;
   gap: 5rem;
-  
+
   section {
     width: 25rem;
     display: flex;

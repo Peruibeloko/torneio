@@ -95,11 +95,11 @@ const createLobbyHandler = async () => {
   game.client.createLobby();
 };
 
-ClientEventBus.getBus().subscribe('createLobbyResponse', lobbyCode => {
+ClientEventBus.instance().subscribe('createLobbyResponse', lobbyCode => {
   game.client.joinLobby(playerName.value, lobbyCode);
 });
 
-ClientEventBus.getBus().subscribe('joinLobbyResponse', info => {
+ClientEventBus.instance().subscribe('joinLobbyResponse', info => {
   if (info === null) {
     disableButtons.value = false;
     joinError.value = true;
