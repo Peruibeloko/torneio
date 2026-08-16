@@ -28,9 +28,6 @@ export class ClientEventBus {
     }
     
     channel.add(handler);
-
-    if (handler === undefined) console.trace()
-    console.log(channel);
   }
 
   unsubscribe<T extends EventType>(topic: T, handler: Handlers[T]) {

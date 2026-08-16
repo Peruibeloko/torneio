@@ -48,14 +48,11 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { onEnter } from '@/client/composables/enter.ts';
 import { useGameStore } from '@/client/stores/game.ts';
-import { ClientEventBus } from '@/game/client/ClientEventBus.ts';
 import { PlayerState } from '@/client/stores/internal';
 
 const game = useGameStore();
-const router = useRouter();
 
 const suggestion = ref('');
 const disabledInputs = ref(false);
@@ -84,11 +81,6 @@ const suggest = () => {
 };
 
 const suggestOnEnter = onEnter(suggest);
-
-ClientEventBus.instance().subscribe('gameStart', () => {
-  // TODO countdown
-  router.push({ name: 'game' });
-});
 </script>
 
 <style src="@/client/assets/lobby.css" scoped></style>

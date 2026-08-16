@@ -1,6 +1,6 @@
 import { GameState } from '@/game/server/ServerLobby.ts';
 import { ThingTuple, VotesTuple } from '@/game/server/Votes.ts';
-import { PlayerState } from "@/client/stores/internal.ts";
+import { PlayerState } from '@/client/stores/internal.ts';
 
 export type ClientEvents = {
   createLobbyResponse: LobbyCreatedEvt;
@@ -29,6 +29,9 @@ export type GenericHandlers<E extends GenericEvent> = {
 
 export type EventType = keyof ClientEvents;
 export type Handlers = GenericHandlers<ClientEvents>;
+export type AnyHandler = Handlers[EventType];
+export type AnyArgs = Parameters<AnyHandler>;
+export type AnyReturn = ReturnType<AnyHandler>;
 
 // TODO nova operação única: sync player
 type LobbyCreatedEvt = string;

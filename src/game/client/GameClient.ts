@@ -2,14 +2,17 @@ import { useGameInternalStore } from '@/client/stores/internal.ts';
 import { useVoteStore } from '@/client/stores/votes.ts';
 import { ClientEventBus } from '@/game/client/ClientEventBus.ts';
 import { ClientMessage } from '@/game/client/ClientMessages.ts';
-import { ClientEvents } from '@/game/events/ClientEvents.ts';
+import { ClientEvents, Handlers } from '@/game/events/ClientEvents.ts';
 import { ManagedSocket } from '@/game/events/ManagedSocket.ts';
 import type { ServerMessage } from '@/game/server/ServerMessages.ts';
+import { useRouter } from 'vue-router';
+import { EventType } from '@/game/events/ClientEvents.ts';
 
 export class GameClient {
   #socket: ManagedSocket<ServerMessage, ClientMessage>;
   #game = useGameInternalStore();
   #votes = useVoteStore();
+  #router = useRouter();
 
   constructor() {
     this.#socket = new ManagedSocket('/game', {
@@ -25,80 +28,62 @@ export class GameClient {
     this.#setupEvents();
   }
 
+  #handleMsg(msg: ServerMessage) {
+    console.debug('[GameClient class] Got message', msg);
+    ClientEventBus.instance().publish(
+      msg.type,
+      msg.data as ClientEvents[typeof msg.type]
+    );
+  }
+
   #setupEvents() {
-    ClientEventBus.instance().subscribe('createLobbyResponse', lobbyCode => {
-      this.#game.lobbyCode = lobbyCode;
-    });
+    type Key = string | number | symbol;
+    const setter =
+      <K extends Key, V>(variable: Record<K, V>, field: K) =>
+      (value: V) => {
+        variable[field] = value;
+      };
 
-    ClientEventBus.instance().subscribe('joinLobbyResponse', info => {
-      if (!info) return;
-      this.#game.lobbyCode = info.lobbyCode;
-      this.#game.playerName = info.uniqueName;
-    });
+    const bus = ClientEventBus.instance();
 
-    ClientEventBus.instance().subscribe('allPlayers', players => {
-      this.#game.players = players;
-    });
+    // prettier-ignore
+    const handlers: Partial<Handlers> = {
+      createLobbyResponse:   setter(this.#game, 'lobbyCode'),
+      allPlayers:            setter(this.#game, 'players'),
+      allSuggestions:        setter(this.#game, 'things'),
+      newVote:               this.#votes.vote,
+      newSuggestion:         (thing) => this.#game.things.unshift(thing),
+      playerJoined:          (player) => this.#game.players.push(player),
+      joinLobbyResponse:     this.#joinedLobby,
+      allVotes:              this.#setVotes,
+      playerReady:           this.#playerReady,
+      playerLeft:            this.#playerLeft,
+      playerReturnedToLobby: this.#playerReturnedToLobby,
+      roundStart:            this.#startRound,
+      roundEnd:              this.#endRound,
+      gameStart:             this.#startGame
+    };
 
-    ClientEventBus.instance().subscribe('allVotes', this.#setVotes.bind(this));
-
-    ClientEventBus.instance().subscribe('allSuggestions', things => {
-      this.#game.things = things;
-    });
-
-    ClientEventBus.instance().subscribe('playerJoined', ({ name, state }) =>
-      this.#game.players.push({ name, state })
-    );
-
-    ClientEventBus.instance().subscribe(
-      'playerReady',
-      this.#playerReady.bind(this)
-    );
-
-    ClientEventBus.instance().subscribe(
-      'playerLeft',
-      this.#playerLeft.bind(this)
-    );
-
-    ClientEventBus.instance().subscribe(
-      'playerReturnedToLobby',
-      this.#playerReturnedToLobby.bind(this)
-    );
-
-    ClientEventBus.instance().subscribe('newVote', ({ player, thing }) =>
-      this.#votes.vote(thing, player)
-    );
-
-    ClientEventBus.instance().subscribe('newSuggestion', thing =>
-      this.#game.things.unshift(thing)
-    );
-
-    ClientEventBus.instance().subscribe('gameStart', () => {
-      for (const p of this.#game.players) {
-        p.state = 'inGame';
-      }
-    });
-
-    ClientEventBus.instance().subscribe(
-      'roundStart',
-      this.#startRound.bind(this)
-    );
-
-    ClientEventBus.instance().subscribe('roundEnd', this.#endRound.bind(this));
+    for (const key in handlers) {
+      const topic = key as EventType;
+      bus.subscribe(topic, (handlers as Handlers)[topic].bind(this));
+    }
   }
 
   createLobby() {
-    this.#socket.send({
-      type: 'create',
-      data: null
-    });
+    this.#socket.send({ type: 'create', data: null });
   }
 
   joinLobby(plainName: string, lobbyCode: string) {
-    this.#socket.send({
-      type: 'join',
-      data: { lobbyCode, player: plainName }
-    });
+    this.#socket.send({ type: 'join', data: { lobbyCode, player: plainName } });
+  }
+
+  #joinedLobby(info: ClientEvents['joinLobbyResponse']) {
+    if (!info) return;
+    this.#game.lobbyCode = info.lobbyCode;
+    this.#game.playerName = info.uniqueName;
+    if (info.stage === 'lobby') return this.#router.push({ name: 'lobby' });
+    this.#router.push({ name: 'game' });
   }
 
   returnToLobby() {
@@ -109,6 +94,7 @@ export class GameClient {
         player: this.#game.playerName
       }
     });
+    this.#router.push({ name: 'lobby' });
   }
 
   leaveLobby() {
@@ -116,6 +102,8 @@ export class GameClient {
       type: 'leave',
       data: { lobbyCode: this.#game.lobbyCode, player: this.#game.playerName }
     });
+    this.#clearState();
+    this.#router.push({ name: 'home' });
   }
 
   suggest(thing: string) {
@@ -136,7 +124,7 @@ export class GameClient {
   }
 
   vote(thing: string) {
-    this.#votes.vote(thing, this.#game.playerName);
+    this.#votes.vote({ thing, player: this.#game.playerName });
     this.#socket.send({
       type: 'vote',
       data: {
@@ -147,10 +135,19 @@ export class GameClient {
     });
   }
 
+  #startGame() {
+    for (const p of this.#game.players) {
+      p.state = 'inGame';
+    }
+
+    // TODO countdown
+    this.#router.push({ name: 'game' });
+  }
+
   #startRound({ things, round }: ClientEvents['roundStart']) {
     this.#game.round = round;
 
-    this.#votes.reset();
+    this.#votes.$reset();
     this.#votes.setThings(things);
   }
 
@@ -183,11 +180,8 @@ export class GameClient {
     this.#votes.setVotes(votes);
   }
 
-  #handleMsg(msg: ServerMessage) {
-    console.debug('[GameClient class] Got message', msg);
-    ClientEventBus.instance().publish(
-      msg.type,
-      msg.data as ClientEvents[typeof msg.type]
-    );
+  #clearState() {
+    this.#game.$reset();
+    this.#votes.$reset();
   }
 }

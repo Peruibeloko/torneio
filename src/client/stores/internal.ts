@@ -22,6 +22,16 @@ export const useGameInternalStore = defineStore('gameInternal', () => {
   const winner = ref('');
   const isGameEnd = ref(false);
 
+  function $reset() {
+    playerName.value = '';
+    lobbyCode.value = '';
+    players.value = [];
+    things.value = [];
+    round.value = 1;
+    winner.value = '';
+    isGameEnd.value = false;
+  }
+
   return {
     client,
     playerName,
@@ -30,6 +40,7 @@ export const useGameInternalStore = defineStore('gameInternal', () => {
     things,
     round,
     winner,
-    isGameEnd
+    isGameEnd,
+    $reset
   };
 });

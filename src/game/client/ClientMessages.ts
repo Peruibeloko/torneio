@@ -1,37 +1,26 @@
+// prettier-ignore
 export type ClientMessage =
-  | { type: 'create'; data: null }
-  | { type: 'join'; data: JoinMsg }
-  | { type: 'returnLobby'; data: ReturnLobbyMsg }
-  | { type: 'leave'; data: LeaveMsg }
-  | { type: 'suggest'; data: SuggestMsg }
-  | { type: 'ready'; data: ReadyMsg }
-  | { type: 'vote'; data: VoteMsg };
+  | { type: 'create';      data: null }
+  | { type: 'join';        data: PlayerMsg }
+  | { type: 'returnLobby'; data: PlayerMsg }
+  | { type: 'returnHome';  data: PlayerMsg }
+  | { type: 'leave';       data: PlayerMsg }
+  | { type: 'suggest';     data: SuggestMsg }
+  | { type: 'ready';       data: PlayerMsg }
+  | { type: 'vote';        data: VoteMsg };
 
-type ClientMessageBase = {
+type PlayerMsg = {
+  player: string;
   lobbyCode: string;
 };
 
-export type JoinMsg = {
-  player: string;
-} & ClientMessageBase;
-
-export type ReturnLobbyMsg = {
-  player: string;
-} & ClientMessageBase;
-
-export type LeaveMsg = {
-  player: string;
-} & ClientMessageBase;
-
 export type SuggestMsg = {
+  lobbyCode: string;
   thing: string;
-} & ClientMessageBase;
-
-export type ReadyMsg = {
-  player: string;
-} & ClientMessageBase;
+};
 
 export type VoteMsg = {
+  lobbyCode: string;
   player: string;
   thing: string;
-} & ClientMessageBase;
+};

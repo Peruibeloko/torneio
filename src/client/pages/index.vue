@@ -64,12 +64,10 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { onEnter } from '@/client/composables/enter.ts';
 import { useGameStore } from '@/client/stores/game.ts';
 import { ClientEventBus } from '@/game/client/ClientEventBus.ts';
 
-const router = useRouter();
 const game = useGameStore();
 const disableButtons = ref(false);
 
@@ -100,14 +98,13 @@ ClientEventBus.instance().subscribe('createLobbyResponse', lobbyCode => {
 });
 
 ClientEventBus.instance().subscribe('joinLobbyResponse', info => {
-  if (info === null) {
-    disableButtons.value = false;
-    joinError.value = true;
-    setTimeout(() => (joinError.value = false), 3000);
-    return;
-  }
-  if (info.stage === 'lobby') return router.push({ name: 'lobby' });
-  router.push({ name: 'game' });
+   // success
+  if (info !== null) return;
+  
+  // error handling
+  disableButtons.value = false;
+  joinError.value = true;
+  setTimeout(() => (joinError.value = false), 3000);
 });
 </script>
 

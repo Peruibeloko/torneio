@@ -23,7 +23,7 @@ export const useVoteStore = defineStore('votes', () => {
     votesR.value.delete(player);
   }
 
-  function vote(thing: string, player: string) {
+  function vote({ thing, player }: { thing: string; player: string }) {
     const isVoteForL = thing === thingL.value;
 
     if (isVoteForL) {
@@ -35,7 +35,7 @@ export const useVoteStore = defineStore('votes', () => {
     }
   }
 
-  function reset() {
+  function $reset() {
     thingL.value = '';
     thingR.value = '';
     votesL.value.clear();
@@ -51,6 +51,6 @@ export const useVoteStore = defineStore('votes', () => {
     setVotes,
     removePlayer,
     vote,
-    reset
+    $reset
   };
 });
